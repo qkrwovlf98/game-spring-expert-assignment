@@ -5,6 +5,8 @@ import com.gameexpert.chat.event.ChatSavedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import com.gameexpert.chat.repository.ChatMessageRepository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -31,7 +33,28 @@ public class ChatService {
     @Transactional
     public ChatMessageResponse saveMessage(Long worldId, String sender, String content) {
         // TODO Lv 5: 채팅을 저장하고 savedResponse(worldId, saved)의 결과를 반환합니다.
-        throw new UnsupportedOperationException("Lv 5: 채팅 저장을 구현하세요.");
+        // 0.worldId로 월드를 조회하고, 없으면 NotFoundException으로 WORLD_NOT_FOUND 에러를 던집니다.
+        // 1.조회한 월드와 전달받은 닉네임, 내용으로 ChatMessage를 만들어
+        // 2.chatMessageRepository.save()로 저장
+        // 3.저장 결과를 saved에 담고
+        // 4.savedResponse(worldId, saved)에 결과담아 반환.(여기에 이벤트 발생시키는 코드가 있다면서요? 뭔코드인가 싶어서 GPT한테 물어봤어요)
+
+        //0
+        World world = worldRepository.findById(worldId)
+                .orElseThrow(() -> new NotFoundException("WORLD_NOT_FOUND"));
+
+        //1
+        ChatMessage chatMessage=new ChatMessage(
+                world,
+                sender,
+                content
+        );
+
+        //2+3
+        ChatMessage saved = chatMessageRepository.save(chatMessage);
+
+        //4
+        return savedResponse(worldId,saved);
     }
 
     @Transactional(readOnly = true)
@@ -46,7 +69,18 @@ public class ChatService {
                 .findByWorldIdOrderByCreatedAtDescIdDesc(worldId, PageRequest.of(0, capped));
 
         // TODO Lv 5: recent를 오래된 순서로 바꾸고 응답 DTO 목록으로 반환합니다.
-        return List.of();
+        Collections.reverse(recent);
+
+        List<ChatMessageResponse> responses = new ArrayList<>();
+
+        for (ChatMessage message : recent){
+            responses.add(new ChatMessageResponse(
+                    message.getSenderNickname(),
+                    message.getContent(),
+                    message.getCreatedAt()
+                    ));
+        }
+        return responses;
     }
 
     private ChatMessageResponse savedResponse(Long worldId, ChatMessage saved) {

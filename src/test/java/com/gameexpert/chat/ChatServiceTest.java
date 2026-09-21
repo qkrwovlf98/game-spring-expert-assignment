@@ -92,7 +92,7 @@ class ChatServiceTest {
         });
     }
 
-    // @Test
+    @Test
     void savesMessageAndReturnsStoredFields() {
         ChatMessageResponse response = transactions.execute(status -> service.saveMessage(world.getId(), "Alice", "안녕하세요"));
         List<ChatMessage> saved = transactions.execute(status -> entityManager
