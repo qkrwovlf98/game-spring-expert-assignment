@@ -20,7 +20,11 @@ public class PlayerService {
     @Transactional
     public void createPlayer(CreatePlayerRequest request) {
         // TODO Lv 3: 닉네임 중복을 확인하고 플레이어를 저장합니다.
-        throw new UnsupportedOperationException("Lv 3: 플레이어 등록을 구현하세요.");
+        String requestNickname = request.getNickname();
+        if(playerRepository.existsByNickname(requestNickname)){
+            throw new ConflictException("DUPLICATE_NICKNAME");
+        }
+        savePlayer(new Player(requestNickname));
     }
 
     private void savePlayer(Player player) {
