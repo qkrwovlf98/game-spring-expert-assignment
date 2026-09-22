@@ -13,6 +13,8 @@ import org.springframework.web.socket.WebSocketSession;
 @Component
 public class WorldSessionRegistry implements com.gameexpert.api.SessionRegistry {
 
+    //ConcurrentHashMap<String, Entry> -> playerName, session
+    //Map이 중복Key(=nickName)를 허용하지 않으니 같은 월드에 같은 nickName+다른 세션은 존재할수없다.
     private final Map<Long, ConcurrentHashMap<String, Entry>> worlds = new ConcurrentHashMap<>();
 
     public Entry register(Long worldId, String nickname, WebSocketSession session) {
@@ -23,7 +25,7 @@ public class WorldSessionRegistry implements com.gameexpert.api.SessionRegistry 
             ConcurrentHashMap<String, Entry> sessions = current == null
                     ? new ConcurrentHashMap<>() : current;
             // TODO Lv 9: putIfAbsent()로 candidate를 등록하고, 새로 등록했으면 added를 true로 설정합니다.
-            boolean added = false;
+            boolean added = sessions.putIfAbsent(nicknameKey,candidate)==null;
             if (added) {
                 registered.set(candidate);
             }
@@ -52,7 +54,7 @@ public class WorldSessionRegistry implements com.gameexpert.api.SessionRegistry 
             return null;
         }
         // TODO Lv 9: sessions에서 key(nickname)에 해당하는 연결을 반환합니다.
-        return null;
+        return sessions.get(key(nickname));
     }
 
     public Collection<Entry> entries(Long worldId) {
